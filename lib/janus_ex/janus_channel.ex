@@ -5,6 +5,7 @@ defmodule JanusEx.JanusChannel do
   alias JanusEx.Room
 
   @client Janus
+  @plugin "janus.plugin.audiobridge"
 
   # opts = %{pid: pid, room_name: room_name}
   def start_link(opts) do
@@ -56,6 +57,10 @@ defmodule JanusEx.JanusChannel do
 
     state = state |> Map.put(:txs, Map.put(txs, tx_id, :trickle))
 
+    # Janus.send_message(@client, session_id, handle_id, %{
+    #   "body" => %{"request" => "listparticipants", "room" => Map.get(state, :room_id)}
+    # })
+
     {:reply, :ok, state}
   end
 
@@ -103,78 +108,16 @@ defmodule JanusEx.JanusChannel do
     Map.pop(txs, tx_id)
     |> case do
       {:session, txs} ->
-        %{"janus" => "success", "data" => %{"id" => session_id}} = msg
-        {:ok, _owner_id} = Registry.register(Janus.Session.Registry, session_id, [])
-        {:ok, tx_id} = Janus.attach(@client, session_id, "janus.plugin.audiobridge")
-        Process.send_after(self(), :keepalive, 30_000)
-
-        state
-        |> Map.put(:session_id, session_id)
-        |> Map.put(:txs, Map.put(txs, tx_id, :handle))
+        process_session(state, txs, msg)
 
       {:handle, txs} ->
-        %{session_id: session_id} = state
-
-        %{
-          "data" => %{"id" => handle_id},
-          "janus" => "success",
-          "session_id" => ^session_id,
-          "transaction" => ^tx_id
-        } = msg
-
-        room_name = Map.get(state, :room_name)
-
-        state =
-          Room.janus_room_created?(room_name)
-          |> if do
-            {:ok, tx_id} =
-              Janus.send_message(@client, session_id, handle_id, %{
-                "body" => %{
-                  "request" => "join",
-                  "room" => Room.janus_room_id(room_name)
-                }
-              })
-
-            Map.put(state, :txs, Map.put(txs, tx_id, :join))
-          else
-            Process.send_after(self(), :join_janus_room, 1000)
-            Map.put(state, :txs, txs)
-          end
-
-        Map.put(state, :handle_id, handle_id)
+        process_handle(state, txs, msg)
 
       {:join, txs} ->
-        %{handle_id: handle_id, session_id: session_id} = state
-
-        case msg do
-          %{"janus" => "ack", "session_id" => ^session_id} ->
-            state
-
-          %{
-            "janus" => "event",
-            "plugindata" => %{
-              "data" => %{
-                "audiobridge" => "joined",
-                "id" => participant_id,
-                "participants" => _other_participants,
-                "room" => _room_id
-              },
-              "plugin" => "janus.plugin.audiobridge"
-            },
-            "sender" => ^handle_id,
-            "session_id" => ^session_id
-          } ->
-            send(Map.get(state, :pid), {:gimme_offer, "gimme_offer"})
-
-            state
-            |> Map.put(:txs, txs)
-            |> Map.put(:participant_id, participant_id)
-        end
+        process_join(state, txs, msg)
 
       {:trickle, txs} ->
-        %{session_id: session_id} = state
-        %{"janus" => "ack", "session_id" => ^session_id} = msg
-        Map.put(state, :txs, txs)
+        process_trickle(state, txs, msg)
 
       {nil, _txs} ->
         %{session_id: session_id, handle_id: handle_id} = state
@@ -206,9 +149,86 @@ defmodule JanusEx.JanusChannel do
     end
   end
 
-  defp handle_janus_msg(msg, state) do
+  defp handle_janus_msg(state, msg) do
     IO.inspect(msg, label: "unexpected socket message")
+    state
+  end
+
+  defp process_session(state, txs, msg) do
+    %{"janus" => "success", "data" => %{"id" => session_id}} = msg
+
+    {:ok, _owner_id} = Registry.register(Janus.Session.Registry, session_id, [])
+    {:ok, tx_id} = Janus.attach(@client, session_id, @plugin)
+    Process.send_after(self(), :keepalive, 30_000)
 
     state
+    |> Map.put(:session_id, session_id)
+    |> Map.put(:txs, Map.put(txs, tx_id, :handle))
+  end
+
+  defp process_handle(state, txs, %{"transaction" => tx_id} = msg) do
+    %{session_id: session_id, room_name: room_name} = state
+
+    %{
+      "data" => %{"id" => handle_id},
+      "janus" => "success",
+      "session_id" => ^session_id,
+      "transaction" => ^tx_id
+    } = msg
+
+    state =
+      Room.janus_room_created?(room_name)
+      |> if do
+        {:ok, tx_id} =
+          Janus.send_message(@client, session_id, handle_id, %{
+            "body" => %{
+              "request" => "join",
+              "room" => Room.janus_room_id(room_name)
+            }
+          })
+
+        Map.put(state, :txs, Map.put(txs, tx_id, :join))
+      else
+        Process.send_after(self(), :join_janus_room, 1000)
+        Map.put(state, :txs, txs)
+      end
+
+    Map.put(state, :handle_id, handle_id)
+  end
+
+  defp process_join(state, txs, msg) do
+    %{handle_id: handle_id, session_id: session_id} = state
+
+    case msg do
+      %{"janus" => "ack", "session_id" => ^session_id} ->
+        state
+
+      %{
+        "janus" => "event",
+        "plugindata" => %{
+          "data" => %{
+            "audiobridge" => "joined",
+            "id" => participant_id,
+            "participants" => _other_participants,
+            "room" => room_id
+          },
+          "plugin" => "janus.plugin.audiobridge"
+        },
+        "sender" => ^handle_id,
+        "session_id" => ^session_id
+      } ->
+        send(Map.get(state, :pid), {:gimme_offer, "gimme_offer"})
+
+        state
+        |> Map.put(:txs, txs)
+        |> Map.put(:participant_id, participant_id)
+        |> Map.put(:room_id, room_id)
+    end
+  end
+
+  defp process_trickle(state, txs, msg) do
+    %{session_id: session_id} = state
+    %{"janus" => "ack", "session_id" => ^session_id} = msg
+    Map.put(state, :txs, txs)
   end
 end

@@ -11,7 +11,7 @@ defmodule Web.RoomChannel do
 
   def join("room:" <> room_name, _params, socket) do
     {:ok, pid} = JanusChannel.start_link(%{pid: self(), room_name: room_name})
-    :ok = JanusChannel.join(pid)
+    :ok = JanusChannel.create_session(pid)
 
     socket =
       socket

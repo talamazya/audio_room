@@ -1,4 +1,7 @@
 defmodule Web.RoomView do
   use Web, :view
-  # alias JanusEx.Room
+
+  def render("index.json", %{rooms: rooms}) do
+    %{data: rooms}
+  end
 end

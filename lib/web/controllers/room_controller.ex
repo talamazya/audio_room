@@ -1,12 +1,12 @@
 defmodule Web.RoomController do
   use Web, :controller
 
-  # alias JanusEx.Room
+  alias JanusEx.Room
 
   def index(conn, _params) do
-    # rooms = Room.list_rooms()
-    rooms = []
-    render(conn, "index.html", rooms: rooms)
+    rooms = Room.list_rooms()
+
+    render(conn, "index.json", rooms: rooms)
   end
 
   def show(conn, %{"room_name" => room_name}) do

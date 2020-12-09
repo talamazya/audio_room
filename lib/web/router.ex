@@ -9,9 +9,9 @@ defmodule Web.Router do
   scope "/", Web do
     pipe_through :browser
 
-    get "/", RoomController, :index
-    get "/:room_name", RoomController, :show
-    post "/:room_name/messages", MessageController, :create
-    put "/:room_name/messages", MessageController, :create
+    get "/rooms", RoomController, :index
+    get "/rooms/:room_name", RoomController, :show
+    post "/rooms/:room_name/messages", MessageController, :create
+    put "/rooms/:room_name/messages", MessageController, :create
   end
 end

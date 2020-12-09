@@ -10,6 +10,10 @@ defmodule JanusEx.Room do
     {:ok, state}
   end
 
+  def list_rooms() do
+    GenServer.call(__MODULE__, :list_rooms)
+  end
+
   def exist?(room_name) do
     GenServer.call(__MODULE__, {:exist, room_name})
   end
@@ -55,6 +59,10 @@ defmodule JanusEx.Room do
       |> leave_room(msg, state)
 
     {:reply, :ok, state}
+  end
+
+  def handle_call(:list_rooms, _from, state) do
+    {:reply, state, state}
   end
 
   defp janus_room_id(room_name) do

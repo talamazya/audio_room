@@ -24,6 +24,18 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :janus_ws_example, :janus,
+  admin_secret: "admin_secret",
+  admin_http_port: 8088,
+  admin_path: "/admin",
+  api_secret: "api_secret",
+  host: "localhost",
+  http_port: 8088,
+  http_protocol: "http",
+  path: "/janus",
+  ws_port: 8188,
+  ws_protocol: "websocket"
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"

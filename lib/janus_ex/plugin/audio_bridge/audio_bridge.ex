@@ -4,6 +4,10 @@ defmodule JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge do
   @client Janus
   @plugin "janus.plugin.audiobridge"
 
+  def plugin_name() do
+    @plugin
+  end
+
   def create_session() do
     Janus.create_session(@client)
   end

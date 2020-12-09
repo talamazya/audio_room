@@ -42,7 +42,8 @@ defmodule JanusEx.MixProject do
       {:dialyxir, "~> 1.0-rc", only: :dev, runtime: false},
       {:credo, "~> 1.0", only: :dev, runtime: false},
       {:floki, "~> 0.20.4", only: :test},
-      {:distillery, "~> 2.0", runtime: false}
+      {:distillery, "~> 2.0", runtime: false},
+      {:httpoison, "~> 1.4"}
     ]
   end
 end

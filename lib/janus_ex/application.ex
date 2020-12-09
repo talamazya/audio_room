@@ -16,7 +16,8 @@ defmodule JanusEx.Application do
       {Registry, keys: :duplicate, name: Janus.WS.Session.Registry},
       {Janus.WS, url: "ws://localhost:8188", registry: Janus.WS.Session.Registry, name: Janus.WS},
       Web.Endpoint,
-      JanusEx.Room
+      JanusEx.Room,
+      JanusEx.Admin
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

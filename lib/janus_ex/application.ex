@@ -9,13 +9,14 @@ defmodule JanusEx.Application do
     # List all child processes to be supervised
     children = [
       # TODO could the room supervisor be a listener
-      JanusEx.Room.Registry.Listener,
-      {Registry,
-       name: JanusEx.Room.Registry, keys: :unique, listeners: [JanusEx.Room.Registry.Listener]},
-      JanusEx.Room.Supervisor,
+      # JanusEx.Room.Registry.Listener,
+      # {Registry,
+      #  name: JanusEx.Room.Registry, keys: :unique, listeners: [JanusEx.Room.Registry.Listener]},
+      # JanusEx.Room.Supervisor,
       {Registry, keys: :duplicate, name: Janus.WS.Session.Registry},
       {Janus.WS, url: "ws://localhost:8188", registry: Janus.WS.Session.Registry, name: Janus.WS},
-      Web.Endpoint
+      Web.Endpoint,
+      JanusEx.Room
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

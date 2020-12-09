@@ -5,7 +5,7 @@ defmodule Web.UserSocket do
   channel "room:*", Web.RoomChannel
 
   # TODO maybe rename this one into "notifications"
-  channel "rooms", Web.RoomsChannel
+  # channel "rooms", Web.RoomsChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After

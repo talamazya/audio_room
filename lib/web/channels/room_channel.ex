@@ -3,11 +3,19 @@ defmodule Web.RoomChannel do
   Mostly used to relay SDPs to janus, also handles some basic text chat functionality
   """
   use Web, :channel
-  alias JanusEx.Room
-  alias Janus.WS, as: Janus
   alias JanusEx.JanusChannel
 
-  @client Janus
+  # def join("room:" <> room_name, _params, socket) do
+  #   {:ok, pid} = JanusChannel.start_link(%{pid: self(), room_name: room_name})
+  #   :ok = JanusChannel.create_session(pid)
+
+  #   socket =
+  #     socket
+  #     |> assign(:room_name, room_name)
+  #     |> assign(:janus_channel_pid, pid)
+
+  #   {:ok, %{history: Room.list_messages(room_name)}, socket}
+  # end
 
   def join("room:" <> room_name, _params, socket) do
     {:ok, pid} = JanusChannel.start_link(%{pid: self(), room_name: room_name})
@@ -18,19 +26,29 @@ defmodule Web.RoomChannel do
       |> assign(:room_name, room_name)
       |> assign(:janus_channel_pid, pid)
 
-    {:ok, %{history: Room.list_messages(room_name)}, socket}
+    {:ok, %{}, socket}
   end
 
-  def handle_in("message:new", %{"content" => content} = params, socket) do
-    message = %Room.Message{author: username(params["name"]), content: content}
-    room_name = socket.assigns.room_name
-    :ok = Room.save_message(room_name, message)
-    broadcast!(socket, "message:new", %{"message" => message})
+  def handle_in("message:new", %{"content" => _content} = _params, socket) do
+    # message = %Room.Message{author: username(params["name"]), content: content}
+    # room_name = socket.assigns.room_name
+    # :ok = Room.save_message(room_name, message)
+    # broadcast!(socket, "message:new", %{"message" => message})
 
-    Web.Endpoint.broadcast!("rooms", "message:new", %{
-      "room_name" => room_name,
-      "message" => message
-    })
+    # Web.Endpoint.broadcast!("rooms", "message:new", %{
+    #   "room_name" => room_name,
+    #   "message" => message
+    # })
+
+    # # I temporary list all participants here!
+    # JanusChannel.participants(socket.assigns.janus_channel_pid)
+    # |> IO.inspect(label: "rikiin list participant")
+
+    {:reply, :ok, socket}
+  end
+
+  def handle_in("mute", %{"content" => participant_id}, socket) do
+    JanusChannel.mute(socket.assigns.janus_channel_pid, participant_id)
 
     {:reply, :ok, socket}
   end
@@ -58,17 +76,30 @@ defmodule Web.RoomChannel do
     {:noreply, socket}
   end
 
-  @spec username(String.t() | nil) :: String.t()
-  defp username(name) do
-    default_username = "anonymous"
-
-    if name do
-      case String.trim(name) do
-        "" -> default_username
-        other -> other
-      end
-    else
-      default_username
-    end
+  def handle_info({:participants, _participants}, socket) do
+    {:noreply, socket}
   end
+
+  def terminate({:shutdown, _} = reason, socket) do
+    JanusChannel.leave_room(socket.assigns.janus_channel_pid)
+
+    reason
+  end
+
+  def terminate(reason, _socket) do
+    reason
+  end
+
+  # defp username(name) do
+  #   default_username = "anonymous"
+
+  #   if name do
+  #     case String.trim(name) do
+  #       "" -> default_username
+  #       other -> other
+  #     end
+  #   else
+  #     default_username
+  #   end
+  # end
 end

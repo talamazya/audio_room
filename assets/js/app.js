@@ -9,6 +9,7 @@ import socket from "./socket";
 let roomsTarget = document.querySelector("section#rooms");
 let messagesTarget = document.querySelector("section#messages");
 let messagesFormTarget = document.querySelector("form#messages-form");
+let messagesFormTarget2 = document.querySelector("form#messages-form2");
 
 if (roomsTarget) {
   let roomsChannel = socket.channel("rooms", {});
@@ -90,6 +91,28 @@ if (messagesTarget && messagesFormTarget) {
       messageForm.set({ content: "", submitEnabled: true });
     });
   });
+
+
+  let messageForm2 = new MessageForm({
+    target: messagesFormTarget2,
+    hydrate: true,
+    data: {
+      submitEnabled: true,
+      name: messagesFormTarget2.querySelector("input#message_name").value,
+      content: messagesFormTarget2.querySelector("textarea#message_content")
+        .value
+    }
+  });
+
+  messageForm2.on("submit", ({ name, content }) => {
+    roomChannel.push("mute", { name, content }).receive("ok", resp => {
+      messageForm.set({ content: "", submitEnabled: true });
+    });
+  });
+
+
+
+  
 
   // webrtc stuff
 

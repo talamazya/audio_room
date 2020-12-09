@@ -22,13 +22,68 @@ defmodule JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge do
     handle_id
   end
 
-  def join(session_id, handle_id, room_id) do
-    msg = %{
-      "body" => %{
-        "request" => "join",
-        "room" => room_id
-      }
+  def create(session_id, handle_id, room_id, description \\ "") do
+    body = %{
+      "request" => "create",
+      "room" => room_id,
+      "description" => description
     }
+
+    msg = %{"body" => body}
+
+    Janus.send_message(@client, session_id, handle_id, msg)
+  end
+
+  def create_response(
+        %{"plugindata" => %{"data" => %{"audiobridge" => "event"}}} = msg,
+        session_id,
+        handle_id
+      ) do
+    %{
+      "janus" => "success",
+      "plugindata" => %{
+        "data" => %{
+          "audiobridge" => "event",
+          # "error" => "Room 112114386 already exists"
+          "error" => value,
+          "error_code" => 486
+        },
+        "plugin" => "janus.plugin.audiobridge"
+      },
+      "sender" => ^handle_id,
+      "session_id" => ^session_id
+    } = msg
+
+    String.split(value)
+    |> Enum.at(1)
+    |> String.to_integer()
+  end
+
+  def create_response(
+        %{"plugindata" => %{"data" => %{"audiobridge" => "created"}}} = msg,
+        session_id,
+        handle_id
+      ) do
+    %{
+      "janus" => "success",
+      "plugindata" => %{
+        "data" => %{
+          "audiobridge" => "created",
+          "permanent" => false,
+          "room" => room_id
+        },
+        "plugin" => "janus.plugin.audiobridge"
+      },
+      "sender" => ^handle_id,
+      "session_id" => ^session_id
+    } = msg
+
+    room_id
+  end
+
+  def join(session_id, handle_id, room_id) do
+    body = %{"request" => "join", "room" => room_id}
+    msg = %{"body" => body}
 
     Janus.send_message(@client, session_id, handle_id, msg)
   end
@@ -66,6 +121,43 @@ defmodule JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge do
 
   def keep_alive(session_id) do
     Janus.send_keepalive(@client, session_id)
+  end
+
+  def participants(session_id, handle_id, room_id) do
+    msg = %{"body" => %{"request" => "listparticipants", "room" => room_id}}
+
+    Janus.send_message(@client, session_id, handle_id, msg)
+  end
+
+  def participants_response(session_id, handle_id, room_id, msg) do
+    %{
+      "janus" => "success",
+      "plugindata" => %{
+        "data" => %{
+          "audiobridge" => "participants",
+          "participants" => participants,
+          "room" => ^room_id
+        },
+        "plugin" => "janus.plugin.audiobridge"
+      },
+      "sender" => ^handle_id,
+      "session_id" => ^session_id,
+      "transaction" => _
+    } = msg
+
+    participants
+  end
+
+  def mute(session_id, handle_id, room_id, participant_id) do
+    body = %{
+      "request" => "mute",
+      "room" => room_id,
+      "id" => participant_id,
+      "secret" => "123"
+    }
+
+    msg = %{"body" => body}
+    Janus.send_message(@client, session_id, handle_id, msg)
   end
 end
 

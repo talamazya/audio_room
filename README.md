@@ -1,21 +1,37 @@
-# Janus WebRTC Example with Phoenix and WebSockets!
+# Audio room with Janus WebRTC
 
-start server Janus
-- docker pull voxo/janus-gateway
-- docker run -it -d --ulimit nofile=65536:65536 --network="host" --restart always voxo/janus-gateway
+## Demo
 
-- docker run -it -d --ulimit nofile=65536:65536 --network="128.199.216.34" --restart always voxo/janus-gateway
+1. Create room
+- create tunnel to server:
+    + `ssh -L 4000:localhost:4000 phung@128.199.216.34`
+    + pass: 123
+- user1 join room "abc":
+    `http://localhost:4000/rooms/abc`
+- user2 join room "abc":
+    `http://localhost:4000/rooms/abc`
 
-To start your Janus and Phoenix servers:
+2. Mute example user:
+- call api to get list user: 
+    `curl -X GET http://128.199.216.34:4000/rooms`
+
+    example response:
+    `{"data":{"abc":{"participants":[2380907743310782,8813342264517907],"room_id":98228475}}}`
+
+- mute user with ID = 2380907743310782 in room_id = 98228475
+    `curl -X PUT http://128.199.216.34:4000/admin/mute/true/98228475/2380907743310782`
+
+## To start your Janus and Phoenix servers:
 
 - Install dependencies with `mix deps.get`
 - Install Node.js dependencies with `cd assets && yarn`
 - Start Janus via docker with `docker-compose up`
 - Start Phoenix endpoint with `mix phx.server`
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+Now you can join a room (example "abc")with `http://localhost:4000/rooms/abc` from your browser.
 
-## Learn more about Janus
+
+ ## Learn more about Janus
 
 - Official website: https://janus.conf.meetecho.com/
 - Docs: https://janus.conf.meetecho.com/docs/

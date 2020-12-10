@@ -1,4 +1,5 @@
 defmodule JanusEx.JanusApi.Plugin.AudioBridge.RestApi.AdminService do
+  alias JanusEx.JanusApi.Plugin.AudioBridge.Response
   alias JanusEx.RestApi.RestClient
   alias JanusEx.Plugin.Util
 
@@ -13,48 +14,13 @@ defmodule JanusEx.JanusApi.Plugin.AudioBridge.RestApi.AdminService do
 
     data = %{janus: "message", transaction: Util.transaction(), body: body}
 
-    case RestClient.post("janus/#{session_id}/#{handle_id}", data) do
-      {:ok,
-       %{
-         "janus" => "success",
-         "plugindata" => %{
-           "data" => %{"audiobridge" => "success", "room" => ^room_id},
-           "plugin" => "janus.plugin.audiobridge"
-         },
-         "sender" => ^handle_id,
-         "session_id" => ^session_id,
-         "transaction" => _
-       }} ->
-        {:ok, :success}
-
-      {:ok,
-       %{
-         "janus" => "success",
-         "plugindata" => %{
-           "data" => %{"audiobridge" => "success"},
-           "plugin" => "janus.plugin.audiobridge"
-         },
-         "sender" => ^handle_id,
-         "session_id" => ^session_id,
-         "transaction" => _
-       }} ->
-        {:ok, :already_muted}
-
-      {:ok,
-       %{
-         "janus" => "success",
-         "plugindata" => %{
-           "data" => data,
-           "plugin" => "janus.plugin.audiobridge"
-         },
-         "sender" => ^handle_id,
-         "session_id" => ^session_id,
-         "transaction" => _
-       }} ->
-        {:error, data}
-
-      _ ->
-        {:error, nil}
+    with {:ok, msg} <- RestClient.post("janus/#{session_id}/#{handle_id}", data),
+         data <- Response.from_session(msg, session_id, handle_id),
+         {:ok, res} <- Response.from_mute(data, room_id) do
+      {:ok, res}
+    else
+      {:error, data} -> {:error, data}
+      _ -> {:error, nil}
     end
   end
 end

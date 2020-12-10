@@ -1,4 +1,5 @@
 defmodule JanusEx.JanusApi.Plugin.AudioBridge.RestApi.SessionService do
+  alias JanusEx.JanusApi.Plugin.AudioBridge.Response
   alias JanusEx.RestApi.RestClient
   alias JanusEx.Plugin.Util
 
@@ -20,12 +21,11 @@ defmodule JanusEx.JanusApi.Plugin.AudioBridge.RestApi.SessionService do
   def attach_plugin(session_id, plugin) when is_integer(session_id) do
     data = %{janus: "attach", transaction: Util.transaction(), plugin: plugin}
 
-    case RestClient.post("janus/#{session_id}", data) do
-      {:ok, %{"data" => %{"id" => handle_id}, "janus" => "success", "session_id" => ^session_id}} ->
-        {:ok, handle_id}
-
-      {:error, _} ->
-        {:error, nil}
+    with {:ok, msg} <- RestClient.post("janus/#{session_id}", data),
+         handle_id <- Response.from_attach(msg, session_id) do
+      {:ok, handle_id}
+    else
+      {:error, _} -> {:error, nil}
     end
   end
 

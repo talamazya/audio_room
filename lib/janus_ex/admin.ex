@@ -3,7 +3,7 @@ defmodule JanusEx.Admin do
 
   alias JanusEx.JanusApi.Plugin.AudioBridge.RestApi.SessionService
   alias JanusEx.JanusApi.Plugin.AudioBridge.RestApi.AdminService
-  alias JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge
+  alias JanusEx.JanusApi.Plugin.AudioBridge.Websocket.AudioBridge
 
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)

@@ -1,5 +1,6 @@
-defmodule JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge do
+defmodule JanusEx.JanusApi.Plugin.AudioBridge.Websocket.AudioBridge do
   alias Janus.WS, as: Janus
+  alias JanusEx.JanusApi.Plugin.AudioBridge.Response
 
   @client Janus
   @plugin "janus.plugin.audiobridge"
@@ -17,13 +18,7 @@ defmodule JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge do
   end
 
   def attach_response(msg, session_id) do
-    %{
-      "janus" => "success",
-      "session_id" => ^session_id,
-      "data" => %{"id" => handle_id}
-    } = msg
-
-    handle_id
+    Response.from_attach(msg, session_id)
   end
 
   def create(session_id, handle_id, room_id, description \\ "") do
@@ -43,22 +38,10 @@ defmodule JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge do
         session_id,
         handle_id
       ) do
-    %{
-      "janus" => "success",
-      "plugindata" => %{
-        "data" => %{
-          "audiobridge" => "event",
-          # "error" => "Room 112114386 already exists"
-          "error" => value,
-          "error_code" => 486
-        },
-        "plugin" => "janus.plugin.audiobridge"
-      },
-      "sender" => ^handle_id,
-      "session_id" => ^session_id
-    } = msg
-
-    String.split(value)
+    msg
+    |> Response.from_session(session_id, handle_id)
+    |> Response.from_room_existed()
+    |> String.split()
     |> Enum.at(1)
     |> String.to_integer()
   end
@@ -68,21 +51,9 @@ defmodule JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge do
         session_id,
         handle_id
       ) do
-    %{
-      "janus" => "success",
-      "plugindata" => %{
-        "data" => %{
-          "audiobridge" => "created",
-          "permanent" => false,
-          "room" => room_id
-        },
-        "plugin" => "janus.plugin.audiobridge"
-      },
-      "sender" => ^handle_id,
-      "session_id" => ^session_id
-    } = msg
-
-    room_id
+    msg
+    |> Response.from_session(session_id, handle_id)
+    |> Response.from_room_create_successfully()
   end
 
   def join(session_id, handle_id, room_id) do
@@ -93,23 +64,9 @@ defmodule JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge do
   end
 
   def join_response(session_id, handle_id, msg) do
-    %{
-      "janus" => "event",
-      "plugindata" => %{
-        "data" => %{
-          "audiobridge" => "joined",
-          "id" => participant_id,
-          "participants" => _,
-          "room" => room_id
-        },
-        "plugin" => @plugin
-      },
-      "sender" => ^handle_id,
-      "session_id" => ^session_id,
-      "transaction" => _
-    } = msg
-
-    {participant_id, room_id}
+    msg
+    |> Response.from_session(session_id, handle_id, "event")
+    |> Response.from_join()
   end
 
   def offer(session_id, handle_id, offer) do
@@ -134,22 +91,9 @@ defmodule JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge do
   end
 
   def participants_response(session_id, handle_id, room_id, msg) do
-    %{
-      "janus" => "success",
-      "plugindata" => %{
-        "data" => %{
-          "audiobridge" => "participants",
-          "participants" => participants,
-          "room" => ^room_id
-        },
-        "plugin" => "janus.plugin.audiobridge"
-      },
-      "sender" => ^handle_id,
-      "session_id" => ^session_id,
-      "transaction" => _
-    } = msg
-
-    participants
+    msg
+    |> Response.from_session(session_id, handle_id)
+    |> Response.from_participants(room_id)
   end
 
   def mute(session_id, handle_id, room_id, participant_id) do

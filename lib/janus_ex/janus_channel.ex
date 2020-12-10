@@ -1,7 +1,7 @@
 defmodule JanusEx.JanusChannel do
   use GenServer, restart: :temporary
 
-  alias JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge
+  alias JanusEx.JanusApi.Plugin.AudioBridge.Websocket.AudioBridge
   alias Janus.WS, as: Janus
   alias JanusEx.Room
 

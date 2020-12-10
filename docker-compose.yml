@@ -1,7 +1,7 @@
 version: '3'
 services:
-  # volumes:
-  #   - ./janus/etc/janus/janus.cfg:/opt/janus/etc/janus/janus.cfg
+  volumes:
+    - ./janus/etc/janus/janus.cfg:/opt/janus/etc/janus/janus.cfg
   janus-gateway:
     image: voxo/janus-gateway
     ports:

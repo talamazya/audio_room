@@ -6,7 +6,7 @@ use Mix.Config
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
-config :janus_ws_example, Web.Endpoint,
+config :audio_room, Web.Endpoint,
   http: [port: 4000],
   https: [
     port: 4001,
@@ -22,7 +22,7 @@ config :janus_ws_example, Web.Endpoint,
   ]
 
 # Watch static and templates for browser reloading.
-config :janus_ws_example, Web.Endpoint,
+config :audio_room, Web.Endpoint,
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},

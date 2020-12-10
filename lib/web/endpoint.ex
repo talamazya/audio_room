@@ -1,5 +1,5 @@
 defmodule Web.Endpoint do
-  use Phoenix.Endpoint, otp_app: :janus_ws_example
+  use Phoenix.Endpoint, otp_app: :audio_room
 
   socket "/socket", Web.UserSocket,
     websocket: true,
@@ -11,7 +11,7 @@ defmodule Web.Endpoint do
   # when deploying your static files in production.
   plug Plug.Static,
     at: "/",
-    from: :janus_ws_example,
+    from: :audio_room,
     gzip: true,
     only: ~w(css fonts images js favicon.ico robots.txt)
 

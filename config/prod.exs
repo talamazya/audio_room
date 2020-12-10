@@ -1,8 +1,8 @@
 use Mix.Config
 
-config :janus_ws_example, Web.Endpoint,
+config :audio_room, Web.Endpoint,
   cache_static_manifest: "priv/static/cache_manifest.json",
-  version: Application.spec(:janus_ws_example, :vsn),
+  version: Application.spec(:audio_room, :vsn),
   server: true,
   root: "."
 

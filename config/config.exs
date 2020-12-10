@@ -8,13 +8,13 @@
 use Mix.Config
 
 # Configures the endpoint
-config :janus_ws_example, Web.Endpoint,
+config :audio_room, Web.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "4Pn8FK3iz4GRvLJ2ZC0+gRJyO+ZxvYoYQSWBKDvTG/kVXeGyZlKFpoM9vf339ujw",
   render_errors: [view: Web.ErrorView, accepts: ~w(html json)],
   pubsub: [name: JanusEx.PubSub, adapter: Phoenix.PubSub.PG2]
 
-config :janus_ws_example, JanusEx.Room, interact_with_janus?: true
+config :audio_room, JanusEx.Room, interact_with_janus?: true
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -24,7 +24,7 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-config :janus_ws_example, :janus,
+config :audio_room, :janus,
   admin_secret: "janusoverlord",
   admin_http_port: 8088,
   admin_path: "/admin",

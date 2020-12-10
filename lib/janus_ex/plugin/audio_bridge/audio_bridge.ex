@@ -164,7 +164,3 @@ defmodule JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge do
     Janus.send_message(@client, session_id, handle_id, msg)
   end
 end
-
-# Janus.send_message(@client, session_id, handle_id, %{
-#   "body" => %{"request" => "listparticipants", "room" => Map.get(state, :room_id)}
-# })

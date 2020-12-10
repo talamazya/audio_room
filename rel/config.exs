@@ -1,5 +1,5 @@
 use Mix.Releases.Config,
-  default_release: :janus_ws_example,
+  default_release: :audio_room,
   default_environment: Mix.env()
 
 # For a full list of config options for both releases
@@ -49,8 +49,8 @@ end
 # when running `mix release`, the first release in the file
 # will be used by default
 
-release :janus_ws_example do
-  set(version: current_version(:janus_ws_example))
+release :audio_room do
+  set(version: current_version(:audio_room))
 
   set(
     applications: [

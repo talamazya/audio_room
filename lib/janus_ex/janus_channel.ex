@@ -1,10 +1,19 @@
 defmodule JanusEx.JanusChannel do
   use GenServer, restart: :temporary
 
+  alias JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge
   alias Janus.WS, as: Janus
   alias JanusEx.Room
 
-  alias JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge
+  @moduledoc """
+    Steps to setup connection : web client <---> phoenix <---> Janus gateway:
+    1. session:         web --> phoenix --> Janus --> phoenix (process_session)
+    2. attach:          phoenix --> janus --> phoenix (process_handle)
+    3. create room:     phoenix --> janus --> phoenix (process_create)
+    4. join:            phoenix --> janus --> phoenix (process_join)
+    5. offer:           phoenix --> web --> phoenix --> janus --> phoenix (process_non_transaction)
+    6. candidate:       phoenix --> web --> phoenix --> janus --> phoenix (process_candidate)
+  """
 
   # opts = %{pid: pid, room_name: room_name}
   def start_link(opts) do
@@ -59,7 +68,7 @@ defmodule JanusEx.JanusChannel do
     %{session_id: session_id, handle_id: handle_id, txs: txs} = state
 
     {:ok, tx_id} = AudioBridge.trickle_candidate(session_id, handle_id, candidate)
-    txs = Map.put(txs, tx_id, :trickle)
+    txs = Map.put(txs, tx_id, :candidate)
 
     {:reply, :ok, Map.put(state, :txs, txs)}
   end
@@ -96,33 +105,10 @@ defmodule JanusEx.JanusChannel do
     {:noreply, state}
   end
 
-  # def handle_info(:join_janus_room, state) do
-  #   %{room_name: room_name, session_id: session_id, handle_id: handle_id, txs: txs} = state
-
-  #   state =
-  #     if Room.janus_room_created?(room_name) do
-  #       room_id = Room.janus_room_id(room_name)
-  #       {:ok, tx_id} = AudioBridge.join(session_id, handle_id, room_id, false)
-
-  #       Map.put(state, :txs, Map.put(txs, tx_id, :join))
-  #     else
-  #       Process.send_after(self(), :join_janus_room, 1000)
-  #       state
-  #     end
-
-  #   {:noreply, state}
-  # end
-
   def handle_info({:janus_ws, msg}, state) do
     {:noreply, handle_janus_msg(state, msg)}
   end
 
-  # step1: session
-  # step2: handle
-  # step3: join
-  # step4: send message: "gimme_offer" from channel --> web
-  # step5: config (offer)
-  # step6: trickle
   defp handle_janus_msg(%{txs: txs} = state, %{"transaction" => tx_id} = msg) do
     Map.pop(txs, tx_id)
     |> case do
@@ -138,8 +124,8 @@ defmodule JanusEx.JanusChannel do
       {:join, txs} ->
         process_join(state, txs, msg)
 
-      {:trickle, txs} ->
-        process_trickle(state, txs, msg)
+      {:candidate, txs} ->
+        process_candidate(state, txs, msg)
 
       {:participants, txs} ->
         process_participants(state, txs, msg)
@@ -213,7 +199,7 @@ defmodule JanusEx.JanusChannel do
     |> Map.put(:room_id, room_id)
   end
 
-  defp process_trickle(state, txs, msg) do
+  defp process_candidate(state, txs, msg) do
     %{session_id: session_id} = state
     %{"janus" => "ack", "session_id" => ^session_id} = msg
     Map.put(state, :txs, txs)

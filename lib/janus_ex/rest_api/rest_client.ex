@@ -63,6 +63,6 @@ defmodule JanusEx.RestApi.RestClient do
   end
 
   defp config(key) when is_atom(key) do
-    :janus_ws_example |> Application.get_env(:janus) |> Keyword.fetch!(key)
+    :audio_room |> Application.get_env(:janus) |> Keyword.fetch!(key)
   end
 end

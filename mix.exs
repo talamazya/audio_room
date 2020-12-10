@@ -3,7 +3,7 @@ defmodule JanusEx.MixProject do
 
   def project do
     [
-      app: :janus_ws_example,
+      app: :audio_room,
       version: "0.1.0",
       elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),

@@ -1,5 +1,6 @@
 defmodule JanusEx.RestApi.AdminService do
   alias JanusEx.RestApi.RestClient
+  alias JanusEx.RestApi.Util
 
   def mute(session_id, handle_id, room_id, participant_id, mute?) do
     request = if mute?, do: "mute", else: "unmute"
@@ -10,7 +11,7 @@ defmodule JanusEx.RestApi.AdminService do
       "id" => participant_id
     }
 
-    data = %{janus: "message", transaction: transaction(), body: body}
+    data = %{janus: "message", transaction: Util.transaction(), body: body}
 
     case RestClient.post("janus/#{session_id}/#{handle_id}", data) do
       {:ok,
@@ -55,11 +56,5 @@ defmodule JanusEx.RestApi.AdminService do
       _ ->
         {:error, nil}
     end
-  end
-
-  defp transaction() do
-    8
-    |> :crypto.strong_rand_bytes()
-    |> Base.encode64(padding: false)
   end
 end

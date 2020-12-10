@@ -1,6 +1,6 @@
-defmodule JanusEx.RestApi.AdminService do
+defmodule JanusEx.JanusApi.Plugin.AudioBridge.RestApi.AdminService do
   alias JanusEx.RestApi.RestClient
-  alias JanusEx.RestApi.Util
+  alias JanusEx.Plugin.Util
 
   def mute(session_id, handle_id, room_id, participant_id, mute?) do
     request = if mute?, do: "mute", else: "unmute"

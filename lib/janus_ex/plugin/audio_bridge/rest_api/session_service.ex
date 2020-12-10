@@ -1,6 +1,6 @@
-defmodule JanusEx.RestApi.SessionService do
+defmodule JanusEx.JanusApi.Plugin.AudioBridge.RestApi.SessionService do
   alias JanusEx.RestApi.RestClient
-  alias JanusEx.RestApi.Util
+  alias JanusEx.Plugin.Util
 
   def create do
     data = %{janus: "create", transaction: Util.transaction()}

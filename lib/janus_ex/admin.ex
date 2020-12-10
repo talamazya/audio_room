@@ -1,8 +1,8 @@
 defmodule JanusEx.Admin do
   use GenServer
 
-  alias JanusEx.RestApi.SessionService
-  alias JanusEx.RestApi.AdminService
+  alias JanusEx.JanusApi.Plugin.AudioBridge.RestApi.SessionService
+  alias JanusEx.JanusApi.Plugin.AudioBridge.RestApi.AdminService
   alias JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge
 
   def start_link(_opts) do

@@ -2,6 +2,7 @@ defmodule JanusEx.Admin do
   use GenServer
 
   alias JanusEx.RestApi.SessionService
+  alias JanusEx.RestApi.AdminService
   alias JanusEx.JanusApi.Plugin.AudioBridge.AudioBridge
 
   def start_link(_opts) do
@@ -10,6 +11,10 @@ defmodule JanusEx.Admin do
 
   def init(state) do
     {:ok, state, {:continue, :janus_session}}
+  end
+
+  def mute(room_id, participant_id, mute?) do
+    GenServer.call(__MODULE__, {:mute, room_id, participant_id, mute?})
   end
 
   def handle_continue(:janus_session, state) do
@@ -25,6 +30,16 @@ defmodule JanusEx.Admin do
       {:noreply, state}
     else
       _ -> :init.stop()
+    end
+  end
+
+  def handle_call({:mute, room_id, participant_id, mute?}, _from, state) do
+    %{session_id: session_id, handle_id: handle_id} = state
+
+    with {:ok, msg} <- AdminService.mute(session_id, handle_id, room_id, participant_id, mute?) do
+      {:reply, {:ok, msg}, state}
+    else
+      {:error, msg} -> {:reply, {:error, msg}, state}
     end
   end
 

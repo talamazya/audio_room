@@ -1,5 +1,9 @@
 # Janus WebRTC Example with Phoenix and WebSockets!
 
+start server Janus
+- docker pull voxo/janus-gateway
+- docker run -it -d --ulimit nofile=65536:65536 --network="host" --restart always voxo/janus-gateway
+
 To start your Janus and Phoenix servers:
 
 - Install dependencies with `mix deps.get`

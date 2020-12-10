@@ -1,39 +1,25 @@
 defmodule Web.AdminController do
   use Web, :controller
 
-  # alias JanusEx.Room
+  alias JanusEx.Admin
 
-  # def create(conn, %{
-  #       "message" => %{"content" => content} = message_params,
-  #       "room_name" => room_name
-  #     }) do
-  #   message = %Room.Message{author: username(message_params["name"]), content: content}
-  #   :ok = Room.save_message(room_name, message)
+  def mute(conn, params) do
+    %{"room_id" => room_id, "participant_id" => participant_id, "mute" => mute?} = params
 
-  #   Web.Endpoint.broadcast!("room:#{room_name}", "message:new", %{"message" => message})
-
-  #   Web.Endpoint.broadcast!("rooms", "message:new", %{
-  #     "room_name" => room_name,
-  #     "message" => message
-  #   })
-
-  #   redirect(conn, to: Routes.room_path(conn, :show, room_name))
-  # end
-
-  def create(conn, %{"room_name" => room_name}) do
-    redirect(conn, to: Routes.room_path(conn, :show, room_name))
+    with {:ok, msg} <-
+           Admin.mute(
+             String.to_integer(room_id),
+             String.to_integer(participant_id),
+             String.to_existing_atom(mute?)
+           ) do
+      conn
+      |> put_status(200)
+      |> render("mute.json", data: %{"mute" => "success", "msg" => msg})
+    else
+      {:error, msg} ->
+        conn
+        |> put_status(422)
+        |> render("mute.json", data: %{"mute" => "failed", "msg" => msg})
+    end
   end
-
-  # defp username(name) do
-  #   default_username = "anonymous"
-
-  #   if name do
-  #     case String.trim(name) do
-  #       "" -> default_username
-  #       other -> other
-  #     end
-  #   else
-  #     default_username
-  #   end
-  # end
 end

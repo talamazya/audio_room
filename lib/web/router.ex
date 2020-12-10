@@ -13,5 +13,7 @@ defmodule Web.Router do
     get "/rooms/:room_name", RoomController, :show
     post "/rooms/:room_name/messages", MessageController, :create
     put "/rooms/:room_name/messages", MessageController, :create
+
+    put "/admin/mute/:mute/:room_id/:participant_id", AdminController, :mute
   end
 end

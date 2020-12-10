@@ -25,7 +25,7 @@ config :logger, :console,
 config :phoenix, :json_library, Jason
 
 config :janus_ws_example, :janus,
-  admin_secret: "admin_secret",
+  admin_secret: "janusoverlord",
   admin_http_port: 8088,
   admin_path: "/admin",
   api_secret: "api_secret",

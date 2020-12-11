@@ -1,48 +1,34 @@
-defmodule Web.RoomChannelTest do
+defmodule RoomChannelTest do
   use Web.ChannelCase
-  use JanusEx.RoomCase
-  alias JanusEx.Room
+
+  alias Web.RoomChannel
+  alias Web.UserSocket
 
   setup do
-    {:ok, socket} = connect(Web.UserSocket, %{}, %{})
+    {:ok, _, socket} =
+      UserSocket
+      |> socket("user_id", %{some: :assign})
+      |> subscribe_and_join(RoomChannel, "room:abc")
+
     {:ok, socket: socket}
   end
 
   describe "join a room" do
-    test "lists existing messages when room exists", %{socket: socket, room_name: room_name} do
-      message = %Room.Message{author: "Boilley", content: "Hoi thire!"}
-      assert :ok == Room.save_message(room_name, message)
-
-      {:ok, %{history: [^message]}, _socket} =
-        join(socket, "room:#{room_name}", %{"name" => "jeffrey"})
-    end
-
-    test "list no messages when room doesn't exist", %{socket: socket, room_name: room_name} do
-      {:ok, %{history: []}, _socket} = join(socket, "room:#{room_name}", %{"name" => "jeffry"})
+    test "happy path", %{socket: socket} do
+      assert Map.get(socket.assigns, :janus_channel_pid) != nil
+      assert Map.get(socket.assigns, :room_name) == "abc"
     end
   end
 
-  describe "post message in a room" do
-    test "with name", %{socket: socket, room_name: room_name} do
-      {:ok, %{history: []}, socket} = subscribe_and_join(socket, "room:#{room_name}", %{})
-
-      ref = push(socket, "message:new", %{"content" => "my name is jeff", "name" => "jeff"})
-      assert_reply(ref, :ok, %{})
-
-      expected_message = %Room.Message{author: "jeff", content: "my name is jeff"}
-      assert_broadcast("message:new", %{"message" => ^expected_message})
-      assert [expected_message] == Room.list_messages(room_name)
+  describe "process webrtc handshake" do
+    test "when process offer message", %{socket: socket} do
+      ref = push(socket, "offer", %{})
+      assert_reply(ref, :ok)
     end
 
-    test "without name", %{socket: socket, room_name: room_name} do
-      {:ok, %{history: []}, socket} = subscribe_and_join(socket, "room:#{room_name}", %{})
-
-      ref = push(socket, "message:new", %{"content" => "my name is ", "name" => " "})
-      assert_reply(ref, :ok, %{})
-
-      expected_message = %Room.Message{author: "anonymous", content: "my name is "}
-      assert_broadcast("message:new", %{"message" => ^expected_message})
-      assert [expected_message] == Room.list_messages(room_name)
+    test "when process candidate message", %{socket: socket} do
+      ref = push(socket, "candidate", %{})
+      assert_reply(ref, :ok)
     end
   end
 end

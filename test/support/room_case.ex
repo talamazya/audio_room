@@ -5,7 +5,8 @@ defmodule JanusEx.RoomCase do
   """
 
   use ExUnit.CaseTemplate
-  alias JanusEx.Room
+
+  # alias JanusEx.Room
 
   using do
     quote do
@@ -14,13 +15,6 @@ defmodule JanusEx.RoomCase do
   end
 
   setup do
-    on_exit(fn ->
-      # TODO this is also a hack, but will do for now
-      Enum.each(Room.list_rooms(), &Room.Supervisor.stop_room/1)
-    end)
-
-    Enum.each(Room.list_rooms(), &Room.Supervisor.stop_room/1)
-
     {:ok, room_name: room_name()}
   end
 

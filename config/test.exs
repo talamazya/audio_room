@@ -10,3 +10,9 @@ config :audio_room, Web.Endpoint,
 config :logger, level: :warn
 
 config :audio_room, JanusEx.Room, interact_with_janus?: false
+
+config :audio_room, JanusEx.JanusChannel, offer_mock?: true
+
+config :audio_room, JanusEx.JanusChannel, candidate_mock?: true
+
+config :audio_room, JanusEx.JanusChannel, gimme_offer_mock?: true

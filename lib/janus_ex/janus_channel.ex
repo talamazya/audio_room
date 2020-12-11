@@ -29,11 +29,19 @@ defmodule JanusEx.JanusChannel do
   end
 
   def offer(pid, offer) do
-    GenServer.call(pid, {:offer, offer})
+    if offer_mock?() do
+      :ok
+    else
+      GenServer.call(pid, {:offer, offer})
+    end
   end
 
   def candidate(pid, candidate) do
-    GenServer.call(pid, {:candidate, candidate})
+    if candidate_mock?() do
+      :ok
+    else
+      GenServer.call(pid, {:candidate, candidate})
+    end
   end
 
   def participants(pid) do
@@ -143,7 +151,7 @@ defmodule JanusEx.JanusChannel do
     state
   end
 
-  defp process_session(state, txs, msg) do
+  def process_session(state, txs, msg) do
     %{"janus" => "success", "data" => %{"id" => session_id}} = msg
 
     {:ok, _owner_id} = Registry.register(Janus.Session.Registry, session_id, [])
@@ -155,7 +163,7 @@ defmodule JanusEx.JanusChannel do
     |> Map.put(:txs, Map.put(txs, tx_id, :handle))
   end
 
-  defp process_handle(state, txs, msg) do
+  def process_handle(state, txs, msg) do
     %{session_id: session_id, room_name: room_name} = state
     handle_id = AudioBridge.attach_response(msg, session_id)
     state = Map.put(state, :handle_id, handle_id)
@@ -173,7 +181,7 @@ defmodule JanusEx.JanusChannel do
     end
   end
 
-  defp process_create(state, txs, msg) do
+  def process_create(state, txs, msg) do
     %{session_id: session_id, handle_id: handle_id, room_name: room_name} = state
     room_id = AudioBridge.create_response(msg, session_id, handle_id)
 
@@ -184,10 +192,12 @@ defmodule JanusEx.JanusChannel do
     Map.put(state, :txs, Map.put(txs, tx_id, :join))
   end
 
-  defp process_join(state, _txs, %{"janus" => "ack"}), do: state
+  def process_join(state, _txs, %{"janus" => "ack"}), do: state
 
-  defp process_join(%{handle_id: handle_id, session_id: session_id} = state, txs, msg) do
-    send(Map.get(state, :pid), {:gimme_offer, "gimme_offer"})
+  def process_join(%{handle_id: handle_id, session_id: session_id} = state, txs, msg) do
+    unless gimme_offer_mock?() do
+      send(Map.get(state, :pid), {:gimme_offer, "gimme_offer"})
+    end
 
     {participant_id, room_id} = AudioBridge.join_response(session_id, handle_id, msg)
 
@@ -239,5 +249,17 @@ defmodule JanusEx.JanusChannel do
   defp process_event(state, msg) do
     IO.inspect(msg, label: "event has not been supported yet!")
     state
+  end
+
+  defp offer_mock?() do
+    !!get_in(Application.get_env(:audio_room, __MODULE__), [:offer_mock?])
+  end
+
+  defp candidate_mock?() do
+    !!get_in(Application.get_env(:audio_room, __MODULE__), [:candidate_mock?])
+  end
+
+  defp gimme_offer_mock?() do
+    !!get_in(Application.get_env(:audio_room, __MODULE__), [:gimme_offer_mock?])
   end
 end

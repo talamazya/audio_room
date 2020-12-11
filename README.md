@@ -30,8 +30,11 @@
 
 Now you can join a room (example "abc") with `http://localhost:4000/rooms/abc` from your browser.
 
+## Run unit test
 
- ## Learn more about Janus
+    `MIX_ENV=test mix test`
+
+## Learn more about Janus
 
 - Official website: https://janus.conf.meetecho.com/
 - Docs: https://janus.conf.meetecho.com/docs/

@@ -34,6 +34,16 @@ Now you can join a room (example "abc") with `http://localhost:4000/rooms/abc` f
 
     `MIX_ENV=test mix test`
 
+## design
+- overview:
+![Optional Text](./docs/1.jpg)
+
+- audio room
+![Optional Text](./docs/2.jpg)
+
+- admin control
+![Optional Text](./docs/3.jpg)
+
 ## Learn more about Janus
 
 - Official website: https://janus.conf.meetecho.com/
